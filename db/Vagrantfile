@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  # high quality image built by guys at Chef - https://github.com/chef/bento
+  config.vm.box = "bento/ubuntu-16.04"
+
+  # forward machine postgresql port, so you have access to it as it is on your machine
+  config.vm.network "forwarded_port", guest: 5432, host: 5432
+
+  # limit some of the resources vm will use
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "512"
+    vb.cpus = 1
+  end
+
+  # set locale to UTF-8
+  config.vm.provision "shell", inline: <<-SHELL
+    echo 'LC_ALL="en_US.UTF-8"' > /etc/default/locale
+  SHELL
+
+  # install postgresql
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "install postgresql..."
+    apt-get update
+    apt-get install -y postgresql-9.5
+  SHELL
+
+  # copy configuration files and restart
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "copy configuration files and restart..."
+
+    # permit all remote connections
+    echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.5/main/pg_hba.conf
+
+    # listen to all addresses
+    echo "listen_addresses='*'" >> /etc/postgresql/9.5/main/postgresql.conf
+
+    sudo systemctl restart postgresql.service
+  SHELL
+
+  # set up test db and user
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "set up vagrant db and user"
+    sudo -u postgres psql -c "DROP DATABASE IF EXISTS jooq;"
+    sudo -u postgres psql -c "DROP USER IF EXISTS jooq;"
+    sudo -u postgres psql -c "CREATE USER jooq WITH PASSWORD 'jooq' SUPERUSER;"
+    sudo -u postgres psql -c "CREATE DATABASE jooq WITH ENCODING 'UTF-8' LC_COLLATE='en_US.UTF-8' LC_CTYPE='en_US.UTF-8' OWNER = jooq;"
+    sudo -u postgres psql -c "GRANT ALL ON DATABASE jooq TO jooq;"
+  SHELL
+
+end

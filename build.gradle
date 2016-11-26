@@ -1,0 +1,64 @@
+buildscript {
+	ext {
+		springBootVersion = '1.4.2.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath 'nu.studer:gradle-jooq-plugin:2.0.2'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'nu.studer.jooq'
+
+jar {
+	baseName = 'jooq-starter'
+	version = '0.0.1-SNAPSHOT'
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-jooq')
+
+    // needed by gradle-jooq-plugin
+	jooqRuntime "org.postgresql:postgresql:9.4-1201-jdbc41"
+
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+jooq {
+    src(sourceSets.main) {
+        jdbc {
+            driver = 'org.postgresql.Driver'
+            url = 'jdbc:postgresql://localhost/jooq'
+            user = 'jooq'
+            password = 'jooq'
+            schema = 'public'
+        }
+        generator {
+            name = 'org.jooq.util.DefaultGenerator'
+            strategy {
+                name = 'org.jooq.util.DefaultGeneratorStrategy'
+            }
+            database {
+                name = 'org.jooq.util.postgres.PostgresDatabase'
+                inputSchema = 'public'
+            }
+        }
+    }
+}
