@@ -16,3 +16,12 @@ Project uses Flyway for migrations. Plugin will assume localhost, db named jooq 
 - Run migrations - `gradle flywayMigrate`
 - Get migrations info - `gradle flywayInfo`
 - Clean up database - `gradle flywayClean`
+
+## Initial Database seed
+
+Can be found in db/seed.sql.
+
+You can execute it if you have psql installed via:
+```
+psql -u jooq -h localhost -f db/seed.sql
+```
