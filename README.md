@@ -9,3 +9,7 @@ Building via gradle. Initial configuration assumes the following:
 A Vagrant machine with db and relevant db configuration can be found in db/ folder.
 To use it install Vagrant and VirtualBox and run `vagrant up` in the folder.
 
+## Database management
+
+Project uses Flyway for migrations. Plugin will assume localhost, db named jooq and username/password jooq. Change that in build.gradle if needed.
+
