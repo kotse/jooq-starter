@@ -13,3 +13,6 @@ To use it install Vagrant and VirtualBox and run `vagrant up` in the folder.
 
 Project uses Flyway for migrations. Plugin will assume localhost, db named jooq and username/password jooq. Change that in build.gradle if needed.
 
+- Run migrations - `gradle flywayMigrate`
+- Get migrations info - `gradle flywayInfo`
+- Clean up database - `gradle flywayClean`
