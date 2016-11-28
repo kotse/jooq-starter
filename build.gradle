@@ -36,12 +36,14 @@ repositories {
 
 
 dependencies {
-	compile('org.springframework.boot:spring-boot-starter-jooq')
+	compile 'org.springframework.boot:spring-boot-starter-jooq'
 
+    runtime "org.postgresql:postgresql:9.4-1201-jdbc41"
     // needed by gradle-jooq-plugin
-	jooqRuntime "org.postgresql:postgresql:9.4-1201-jdbc41"
+	jooqRuntime 'org.postgresql:postgresql:9.4-1201-jdbc41'
 
-	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile 'org.assertj:assertj-core:3.5.2'
 }
 
 jooq {
