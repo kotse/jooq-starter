@@ -1,9 +1,10 @@
 package com.starter.jooq;
 
-import org.jooq.DSLContext;
-import org.jooq.Record;
-import org.jooq.Record1;
-import org.jooq.Result;
+import org.jooq.*;
+import org.jooq.conf.ParamType;
+import org.jooq.generated.tables.Event;
+import org.jooq.generated.tables.Person;
+import org.jooq.generated.tables.PersonEventLog;
 import org.jooq.generated.tables.records.EventRecord;
 import org.jooq.generated.tables.records.LocationRecord;
 import org.jooq.generated.tables.records.PersonEventLogRecord;
@@ -76,10 +77,13 @@ public class JooqStarterApplicationTests {
     }
 
     @Test
-    public void jooq_can_build_typesafe_sql_with_join() {
-        String sql = jooq.select(PERSON.FIRST_NAME, EVENT.NAME)
-                .from(PERSON).join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID)).
-                        join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID)).where(EVENT.NAME.equal("?")).getSQL();
+    public void jooq_can_build_typesafe_prepared_statement_sql_with_join() {
+        String sql = jooq.
+                select(PERSON.FIRST_NAME, EVENT.NAME).
+                from(PERSON).
+                  join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID)).
+                  join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID)).
+                where(EVENT.NAME.equal("any_value")).getSQL();
 
         // The SQL that will get generated in a more readable format:
         // select
@@ -91,6 +95,30 @@ public class JooqStarterApplicationTests {
         //   "event"."name" == '?'
 
         assertThat(sql).isEqualTo("select \"public\".\"person\".\"first_name\", \"public\".\"event\".\"name\" from \"public\".\"person\" join \"public\".\"person_event_log\" on \"public\".\"person\".\"id\" = \"public\".\"person_event_log\".\"person_id\" join \"public\".\"event\" on \"public\".\"event\".\"id\" = \"public\".\"person_event_log\".\"event_id\" where \"public\".\"event\".\"name\" = ?");
+    }
+
+    @Test
+    public void jooq_can_build_typesafe_sql_and_inline_parameters() {
+
+        Person p = PERSON.as("p");
+        Event e = EVENT.as("e");
+        PersonEventLog pel = PERSON_EVENT_LOG.as("pel");
+
+        String sql = jooq.
+                select(p.FIRST_NAME, e.NAME).
+                from(p).
+                  join(pel).on(p.ID.equal(pel.PERSON_ID)).
+                  join(e).on(e.ID.equal(pel.EVENT_ID)).
+                where((e.NAME).equalIgnoreCase("jProfessionals")).getSQL(ParamType.INLINED);
+
+        // The SQL that will get generated in a more readable format:
+        // select "p"."first_name", "e"."name"
+        // from "public"."person" as "p"
+        //   join "public"."person_event_log" as "pel" on "p"."id" = "pel"."person_id"
+        //   join "public"."event" as "e" on "e"."id" = "pel"."event_id"
+        // where lower("e"."name") = lower('jProfessionals')
+
+        assertThat(sql).isEqualTo("select \"p\".\"first_name\", \"e\".\"name\" from \"public\".\"person\" as \"p\" join \"public\".\"person_event_log\" as \"pel\" on \"p\".\"id\" = \"pel\".\"person_id\" join \"public\".\"event\" as \"e\" on \"e\".\"id\" = \"pel\".\"event_id\" where lower(\"e\".\"name\") = lower(\'jProfessionals\')");
     }
 
     @Test
