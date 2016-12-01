@@ -54,9 +54,12 @@ public class JooqStarterApplicationTests {
     @Test
     public void jooq_can_build_sql() {
         String sql = jooq.
-                select(field("PERSON.first_name"), field("PERSON_EVENT_LOG.description")).
+                select(
+                        field("PERSON.first_name"),
+                        field("PERSON_EVENT_LOG.description")).
                 from(table("PERSON")).
-                join(table("PERSON_EVENT_LOG")).on(field("PERSON.ID").equal(field("PERSON_EVENT_LOG.person_id"))).getSQL();
+                join(table("PERSON_EVENT_LOG")).on(field("PERSON.ID").equal(field("PERSON_EVENT_LOG.person_id")))
+                .getSQL();
 
         assertThat(sql).isEqualToIgnoringCase("select PERSON.first_name, PERSON_EVENT_LOG.description from PERSON join PERSON_EVENT_LOG on PERSON.ID = PERSON_EVENT_LOG.person_id");
     }
@@ -65,13 +68,15 @@ public class JooqStarterApplicationTests {
     public void jooq_can_build_simple_typesafe_sql() {
         String sql = jooq.selectFrom(PERSON).getSQL();
 
-        // The SQL that will get generated in a more readable format:
-        // select
-        //   "public"."person"."id",
-        //   "public"."person"."first_name",
-        //   "public"."person"."last_name"
-        // from
-        //   "public"."person"
+        /*
+         The SQL that will get generated in a more readable format:
+         select
+           "public"."person"."id",
+           "public"."person"."first_name",
+           "public"."person"."last_name"
+         from
+           "public"."person"
+        */
 
         assertThat(sql).isEqualTo("select \"public\".\"person\".\"id\", \"public\".\"person\".\"first_name\", \"public\".\"person\".\"last_name\" from \"public\".\"person\"");
     }
@@ -83,16 +88,19 @@ public class JooqStarterApplicationTests {
                 from(PERSON).
                   join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID)).
                   join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID)).
-                where(EVENT.NAME.equal("any_value")).getSQL();
+                where(EVENT.NAME.equal("any_value"))
+                .getSQL();
 
-        // The SQL that will get generated in a more readable format:
-        // select
-        //   "public"."person"."first_name", "public"."event"."name"
-        // from "public"."person"
-        //   join "public"."person_event_log" on "public"."person"."id" = "public"."person_event_log"."person_id"
-        //   join "public"."event" on "public"."event"."id" = "public"."person_event_log"."event_id"
-        // where
-        //   "event"."name" == '?'
+        /*
+         The SQL that will get generated in a more readable format:
+         select
+           "public"."person"."first_name", "public"."event"."name"
+         from "public"."person"
+           join "public"."person_event_log" on "public"."person"."id" = "public"."person_event_log"."person_id"
+           join "public"."event" on "public"."event"."id" = "public"."person_event_log"."event_id"
+         where
+           "event"."name" == '?'
+        */
 
         assertThat(sql).isEqualTo("select \"public\".\"person\".\"first_name\", \"public\".\"event\".\"name\" from \"public\".\"person\" join \"public\".\"person_event_log\" on \"public\".\"person\".\"id\" = \"public\".\"person_event_log\".\"person_id\" join \"public\".\"event\" on \"public\".\"event\".\"id\" = \"public\".\"person_event_log\".\"event_id\" where \"public\".\"event\".\"name\" = ?");
     }
@@ -109,14 +117,17 @@ public class JooqStarterApplicationTests {
                 from(p).
                   join(pel).on(p.ID.equal(pel.PERSON_ID)).
                   join(e).on(e.ID.equal(pel.EVENT_ID)).
-                where((e.NAME).equalIgnoreCase("jProfessionals")).getSQL(ParamType.INLINED);
+                where((e.NAME).equalIgnoreCase("jProfessionals"))
+                .getSQL(ParamType.INLINED);
 
-        // The SQL that will get generated in a more readable format:
-        // select "p"."first_name", "e"."name"
-        // from "public"."person" as "p"
-        //   join "public"."person_event_log" as "pel" on "p"."id" = "pel"."person_id"
-        //   join "public"."event" as "e" on "e"."id" = "pel"."event_id"
-        // where lower("e"."name") = lower('jProfessionals')
+        /*
+         The SQL that will get generated in a more readable format:
+         select "p"."first_name", "e"."name"
+         from "public"."person" as "p"
+           join "public"."person_event_log" as "pel" on "p"."id" = "pel"."person_id"
+           join "public"."event" as "e" on "e"."id" = "pel"."event_id"
+         where lower("e"."name") = lower('jProfessionals')
+        */
 
         assertThat(sql).isEqualTo("select \"p\".\"first_name\", \"e\".\"name\" from \"public\".\"person\" as \"p\" join \"public\".\"person_event_log\" as \"pel\" on \"p\".\"id\" = \"pel\".\"person_id\" join \"public\".\"event\" as \"e\" on \"e\".\"id\" = \"pel\".\"event_id\" where lower(\"e\".\"name\") = lower(\'jProfessionals\')");
     }
@@ -153,7 +164,10 @@ public class JooqStarterApplicationTests {
     public void jooq_can_fetch_single_records() {
         PersonRecord personRecord = personRecord("Ivan", "Ivanov");
 
-        PersonRecord fetchedPersonRecord = jooq.selectFrom(PERSON).where(PERSON.FIRST_NAME.eq("Ivan")).fetchOne();
+        PersonRecord fetchedPersonRecord =
+                jooq.selectFrom(PERSON)
+                        .where(PERSON.FIRST_NAME.eq("Ivan"))
+                        .fetchOne();
 
         assertThat(fetchedPersonRecord).isEqualTo(personRecord);
     }
@@ -162,7 +176,11 @@ public class JooqStarterApplicationTests {
     public void jooq_can_fetch_into_object() {
         personRecord("Ivan", "Ivanov");
 
-        String firstName = jooq.select(PERSON.FIRST_NAME).from(PERSON).fetchOneInto(String.class);
+        String firstName = jooq
+                .select(PERSON.FIRST_NAME)
+                .from(PERSON)
+                .fetchOneInto(String.class);
+
         assertThat(firstName).isEqualTo("Ivan");
     }
 
@@ -170,13 +188,21 @@ public class JooqStarterApplicationTests {
     public void jooq_can_fetch_into_optional() {
         personRecord("Ivan", "Ivanov");
 
-        Optional<Record1<String>> optionalRecord = jooq.select(PERSON.FIRST_NAME).from(PERSON).fetchOptional();
+        Optional<Record1<String>> optionalRecord = jooq
+                .select(PERSON.FIRST_NAME)
+                .from(PERSON)
+                .fetchOptional();
+
         assertThat(optionalRecord).isPresent();
     }
 
     @Test
     public void jooq_can_fetch_into_empty_optional() {
-        Optional<Record1<String>> optionalRecord = jooq.select(PERSON.FIRST_NAME).from(PERSON).fetchOptional();
+        Optional<Record1<String>> optionalRecord = jooq
+                .select(PERSON.FIRST_NAME)
+                .from(PERSON)
+                .fetchOptional();
+
         assertThat(optionalRecord).isNotPresent();
     }
 
@@ -185,23 +211,40 @@ public class JooqStarterApplicationTests {
         PersonRecord personRecord = personRecord("Ivan", "Ivanov");
 
         //fetch and compare to what we stored
-        PersonRecord fetchedPersonRecord = jooq.selectFrom(PERSON).where(PERSON.FIRST_NAME.eq("Ivan")).fetchOne();
+        PersonRecord fetchedPersonRecord = jooq
+                .selectFrom(PERSON)
+                .where(PERSON.FIRST_NAME.eq("Ivan"))
+                .fetchOne();
+
         assertThat(fetchedPersonRecord).isEqualTo(personRecord);
+
 
         //update stored
         personRecord.setLastName("Dimitrov");
         personRecord.update();
 
         //fetch and compare that update was OK
-        PersonRecord fetchedUpdatedPersonRecord = jooq.selectFrom(PERSON).where(PERSON.FIRST_NAME.eq("Ivan")).fetchOne();
+        PersonRecord fetchedUpdatedPersonRecord = jooq
+                .selectFrom(PERSON)
+                .where(PERSON.FIRST_NAME.eq("Ivan"))
+                .fetchOne();
+
         assertThat(fetchedUpdatedPersonRecord.getLastName()).isEqualTo("Dimitrov");
 
 
         //delete
-        PersonRecord personRecordToBeDeleted = jooq.selectFrom(PERSON).where(PERSON.FIRST_NAME.eq("Ivan")).fetchOne();
+        PersonRecord personRecordToBeDeleted = jooq
+                .selectFrom(PERSON)
+                .where(PERSON.FIRST_NAME.eq("Ivan"))
+                .fetchOne();
+
         personRecordToBeDeleted.delete();
 
-        PersonRecord emptyRecord = jooq.selectFrom(PERSON).where(PERSON.FIRST_NAME.eq("Ivan")).fetchOne();
+        PersonRecord emptyRecord = jooq
+                .selectFrom(PERSON)
+                .where(PERSON.FIRST_NAME.eq("Ivan"))
+                .fetchOne();
+
         assertThat(emptyRecord).isNull();
     }
 
@@ -216,7 +259,8 @@ public class JooqStarterApplicationTests {
         personEventLogRecord(personRecord, eventRecord, locationRecord);
         personEventLogRecord(anotherPersonRecord, eventRecord, locationRecord);
 
-        Map<String, String> personEventMap = jooq.select(PERSON.FIRST_NAME, EVENT.NAME)
+        Map<String, String> personEventMap = jooq
+                .select(PERSON.FIRST_NAME, EVENT.NAME)
                 .from(PERSON)
                 .join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID))
                 .join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID))
@@ -239,7 +283,8 @@ public class JooqStarterApplicationTests {
         personEventLogRecord(personRecord, eventRecord, locationRecord);
         personEventLogRecord(anotherPersonRecord, eventRecord, locationRecord);
 
-        Map<String, List<String>> groupedMap = jooq.select(PERSON.FIRST_NAME, EVENT.NAME)
+        Map<String, List<String>> groupedMap = jooq
+                .select(PERSON.FIRST_NAME, EVENT.NAME)
                 .from(PERSON)
                 .join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID))
                 .join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID))
@@ -258,7 +303,8 @@ public class JooqStarterApplicationTests {
 
         personEventLogRecord(personRecord, eventRecord, locationRecord);
 
-        Record personJoinedWithEvents = jooq.select().from(PERSON)
+        Record personJoinedWithEvents = jooq
+                .select().from(PERSON)
                 .join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID))
                 .join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID))
                 .fetchOne();
@@ -272,6 +318,7 @@ public class JooqStarterApplicationTests {
 
     private PersonRecord personRecord(String firstName, String lastName) {
         PersonRecord personRecord = jooq.newRecord(PERSON);
+
         personRecord.setFirstName(firstName);
         personRecord.setLastName(lastName);
         personRecord.store();
@@ -281,6 +328,7 @@ public class JooqStarterApplicationTests {
 
     private EventRecord eventRecord(String name) {
         EventRecord eventRecord = jooq.newRecord(EVENT);
+
         eventRecord.setName(name);
         eventRecord.store();
 
@@ -289,6 +337,7 @@ public class JooqStarterApplicationTests {
 
     private LocationRecord locationRecord(String name) {
         LocationRecord locationRecord = jooq.newRecord(LOCATION);
+
         locationRecord.setName(name);
         locationRecord.store();
 
@@ -297,9 +346,11 @@ public class JooqStarterApplicationTests {
 
     private PersonEventLogRecord personEventLogRecord(PersonRecord personRecord, EventRecord eventRecord, LocationRecord locationRecord) {
         PersonEventLogRecord pelRecord = jooq.newRecord(PERSON_EVENT_LOG);
+
         pelRecord.setPersonId(personRecord.getId());
         pelRecord.setLocationId(locationRecord.getId());
         pelRecord.setEventId(eventRecord.getId());
+
         pelRecord.store();
 
         return pelRecord;
