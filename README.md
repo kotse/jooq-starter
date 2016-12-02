@@ -1,4 +1,4 @@
-# JOOQ Starter with Spring Boot
+# jOOQ Starter with Spring Boot
 
 ## Set up
 
@@ -25,3 +25,7 @@ You can execute it if you have psql installed via:
 ```
 psql -u jooq -h localhost -f db/seed.sql
 ```
+
+## jOOQ examples 
+
+Can be found and run in the tests folder

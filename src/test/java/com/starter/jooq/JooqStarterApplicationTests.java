@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -140,10 +141,16 @@ public class JooqStarterApplicationTests {
     }
 
     @Test
-    public void jooq_can_fetched_records_list_is_empty_when_no_data() {
-        Result<PersonRecord> personsResult = jooq.selectFrom(PERSON).fetch();
+    public void jooq_can_lazy_fetch_records() {
+        Cursor<PersonRecord> aCursor = jooq.selectFrom(PERSON).fetchLazy();
 
-        assertThat(personsResult).isEmpty();
+        try (Cursor<PersonRecord> cursor = jooq.selectFrom(PERSON).fetchLazy()) {
+            while (cursor.hasNext()) {
+                PersonRecord personRecord = cursor.fetchOne();
+
+                // doStuff here!
+            }
+        }
     }
 
     @Test
@@ -154,7 +161,7 @@ public class JooqStarterApplicationTests {
 
         assertThat(personRecords).containsExactly(personRecord);
 
-        //or even better
+        //or even simpler
         Result<PersonRecord> personRecordsAgain = jooq.fetch(PERSON);
 
         assertThat(personRecordsAgain).containsExactly(personRecord);
@@ -167,6 +174,7 @@ public class JooqStarterApplicationTests {
         PersonRecord fetchedPersonRecord =
                 jooq.selectFrom(PERSON)
                         .where(PERSON.FIRST_NAME.eq("Ivan"))
+                        .and(PERSON.LAST_NAME.eq("Ivanov"))
                         .fetchOne();
 
         assertThat(fetchedPersonRecord).isEqualTo(personRecord);
@@ -182,6 +190,17 @@ public class JooqStarterApplicationTests {
                 .fetchOneInto(String.class);
 
         assertThat(firstName).isEqualTo("Ivan");
+    }
+
+    @Test
+    public void jooq_can_get_and_operate_resultSet() {
+        PersonRecord personRecord = personRecord("Ivan", "Ivanov");
+
+        ResultSet resultSet = jooq.selectFrom(PERSON).fetchResultSet();
+
+        PersonRecord fetchedRecord = jooq.fetchOne(resultSet).into(PERSON);
+
+        assertThat(fetchedRecord).isEqualTo(personRecord);
     }
 
     @Test
@@ -204,6 +223,25 @@ public class JooqStarterApplicationTests {
                 .fetchOptional();
 
         assertThat(optionalRecord).isNotPresent();
+    }
+
+    @Test
+    public void jooq_can_fetch_fields_from_different_types() {
+        PersonRecord personRecord = personRecord("Ivan", "Ivanov");
+        EventRecord eventRecord = eventRecord("JProfessionals");
+        LocationRecord locationRecord = locationRecord("Plovdiv");
+
+        personEventLogRecord(personRecord, eventRecord, locationRecord);
+
+        Record2<String, String> fetchedRecord = jooq
+                .select(PERSON.FIRST_NAME, EVENT.NAME)
+                .from(PERSON)
+                .join(PERSON_EVENT_LOG).on(PERSON.ID.equal(PERSON_EVENT_LOG.PERSON_ID))
+                .join(EVENT).on(EVENT.ID.equal(PERSON_EVENT_LOG.EVENT_ID))
+                .fetchOne();
+
+        assertThat(fetchedRecord.get(PERSON.FIRST_NAME)).isEqualTo(personRecord.getFirstName());
+        assertThat(fetchedRecord.get(EVENT.NAME)).isEqualTo("JProfessionals");
     }
 
     @Test
@@ -296,7 +334,7 @@ public class JooqStarterApplicationTests {
     }
 
     @Test
-    public void jooq_can_fetch_and_map() {
+    public void jooq_can_fetch_joined_records() {
         PersonRecord personRecord = personRecord("Ivan", "Ivanov");
         EventRecord eventRecord = eventRecord("JProfessionals");
         LocationRecord locationRecord = locationRecord("Plovdiv");
