@@ -1,4 +1,4 @@
-# jOOQ Starter with Spring Boot
+# jOOQ Starter
 
 ## Set up
 
@@ -23,7 +23,7 @@ Can be found in db/seed.sql.
 
 You can execute it if you have psql installed via:
 ```
-psql -u jooq -h localhost -f db/seed.sql
+psql -U jooq -h localhost -f db/seed.sql
 ```
 
 ## jOOQ examples 
